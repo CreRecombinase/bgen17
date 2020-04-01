@@ -65,6 +65,7 @@ target_link_libraries(bgenlib
   PUBLIC Boost::timer
   PUBLIC Boost::filesystem
   PUBLIC Boost::thread)
+set_target_properties(bgenlib PROPERTIES PUBLIC_HEADER "include/genfile/bgen/bgen.hpp;include/genfile/bgen/IndexQuery.hpp;include/genfile/bgen/View.hpp")
 target_link_libraries(bgenlib PUBLIC ZLIB::ZLIB)
 target_link_libraries(bgenlib PUBLIC PkgConfig::ZSTD)
 target_include_directories(bgenlib PUBLIC "include")
@@ -90,16 +91,15 @@ add_executable(bgenix apps/edit-bgen.cpp)
 target_link_libraries(bgenix PRIVATE bgenapp PUBLIC bgenlib)
 target_include_directories(bgenix PUBLIC include)
 
-
-
-
-
-
-
 set(DEST_DIR "${CMAKE_INSTALL_PREFIX}")
-install(TARGETS bgenlib bgenix cat-bgen
+install(TARGETS bgenlib
         LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include
-        )
+        PUBLIC_HEADER DESTINATION include/genfile
+        INCLUDES DESTINATION include/genfile)
+
+install(TARGETS bgenix cat-bgen
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+        PUBLIC_HEADER DESTINATION include
+        INCLUDES DESTINATION include)

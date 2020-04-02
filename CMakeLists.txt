@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.15)
 project (bgen17 CXX)
 set(default_build_type "Release")
 include(FetchContent)
+include(GNUInstallDirs)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 set(BGEN_MAJOR_VERSION 0)
 set(BGEN_MINOR_VERSION 1)
@@ -49,13 +50,13 @@ add_library(sqlitecpp src/Connection.cpp src/Error.cpp src/SQLite3Connection.cpp
 
 set_target_properties(sqlitecpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(sqlitecpp
-  PRIVATE SQLITE_ENABLE_COLUMN_METADATA
-  PRIVATE SQLITE_ENABLE_STAT4
-  PRIVATE SQLITE_MAX_EXPR_DEPTH=10000
-  PRIVATE SQLITE_USE_URI=1)
-target_link_libraries(sqlitecpp PUBLIC SQLite::SQLite3)
-target_link_libraries(sqlitecpp PUBLIC Boost::headers)
-target_include_directories(sqlitecpp PUBLIC include)
+  INTERFACE SQLITE_ENABLE_COLUMN_METADATA
+  INTERFACE SQLITE_ENABLE_STAT4
+  INTERFACE SQLITE_MAX_EXPR_DEPTH=10000
+  INTERFACE SQLITE_USE_URI=1)
+target_link_libraries(sqlitecpp INTERFACE SQLite::SQLite3)
+target_link_libraries(sqlitecpp INTERFACE Boost::headers)
+target_include_directories(sqlitecpp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 
 
 add_library(bgenlib src/bgen.cpp src/IndexQuery.cpp src/MissingValue.cpp src/View.cpp src/zlib.cpp include/genfile/bgen/bgen.hpp include/genfile/bgen/IndexQuery.hpp include/genfile/bgen/View.hpp)
@@ -68,8 +69,8 @@ target_link_libraries(bgenlib
 set_target_properties(bgenlib PROPERTIES PUBLIC_HEADER "include/genfile/bgen/bgen.hpp;include/genfile/bgen/IndexQuery.hpp;include/genfile/bgen/View.hpp")
 target_link_libraries(bgenlib PUBLIC ZLIB::ZLIB)
 target_link_libraries(bgenlib PUBLIC PkgConfig::ZSTD)
-target_include_directories(bgenlib PUBLIC "include")
-target_link_libraries(bgenlib PUBLIC sqlitecpp)
+target_include_directories(bgenlib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
+target_link_libraries(bgenlib INTERFACE sqlitecpp)
 
 add_library(bgenapp src/ApplicationContext.cpp src/CmdLineUIContext.cpp src/get_current_time_as_string.cpp src/OptionProcessor.cpp src/progress_bar.cpp src/Timer.cpp src/CmdLineOptionProcessor.cpp src/OptionDefinition.cpp src/OstreamTee.cpp src/string_utils.cpp src/UIContext.cpp include/appcontext/appcontext.hpp include/appcontext/CmdLineOptionProcessor.hpp include/appcontext/get_current_time_as_string.hpp include/appcontext/OptionDefinition.hpp include/appcontext/OstreamTee.hpp include/appcontext/progress_bar.hpp include/appcontext/Timer.hpp include/appcontext/ApplicationContext.hpp include/appcontext/CmdLineUIContext.hpp include/appcontext/null_ostream.hpp include/appcontext/OptionProcessor.hpp include/appcontext/ProgramFlow.hpp include/appcontext/string_utils.hpp include/appcontext/UIContext.hpp)
 
@@ -87,19 +88,37 @@ add_executable(edit-bgen apps/edit-bgen.cpp)
 target_link_libraries(edit-bgen PRIVATE bgenapp PUBLIC bgenlib)
 target_include_directories(edit-bgen PUBLIC include)
 
-add_executable(bgenix apps/edit-bgen.cpp)
+add_executable(bgenix apps/bgenix.cpp)
 target_link_libraries(bgenix PRIVATE bgenapp PUBLIC bgenlib)
 target_include_directories(bgenix PUBLIC include)
 
 set(DEST_DIR "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS sqlitecpp
+  EXPORT bgen17
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+  PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  )
 install(TARGETS bgenlib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-        PUBLIC_HEADER DESTINATION include/genfile
-        INCLUDES DESTINATION include/genfile)
+  EXPORT bgen17
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+  PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  )
 
-install(TARGETS bgenix cat-bgen
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-        PUBLIC_HEADER DESTINATION include
-        INCLUDES DESTINATION include)
+install(TARGETS bgenix cat-bgen edit-bgen
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDDIR}"
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
+install(EXPORT bgen17
+  FILE
+    bgen.cmake
+  NAMESPACE
+    bgen::
+  DESTINATION
+    ${CMAKE_INSTALL_LIBDIR}/cmake/bgen
+)

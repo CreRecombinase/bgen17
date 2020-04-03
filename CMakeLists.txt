@@ -72,6 +72,7 @@ target_link_libraries(bgenlib PUBLIC PkgConfig::ZSTD)
 target_include_directories(bgenlib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 target_link_libraries(bgenlib INTERFACE sqlitecpp)
 
+# set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
 add_library(bgenapp src/ApplicationContext.cpp src/CmdLineUIContext.cpp src/get_current_time_as_string.cpp src/OptionProcessor.cpp src/progress_bar.cpp src/Timer.cpp src/CmdLineOptionProcessor.cpp src/OptionDefinition.cpp src/OstreamTee.cpp src/string_utils.cpp src/UIContext.cpp include/appcontext/appcontext.hpp include/appcontext/CmdLineOptionProcessor.hpp include/appcontext/get_current_time_as_string.hpp include/appcontext/OptionDefinition.hpp include/appcontext/OstreamTee.hpp include/appcontext/progress_bar.hpp include/appcontext/Timer.hpp include/appcontext/ApplicationContext.hpp include/appcontext/CmdLineUIContext.hpp include/appcontext/null_ostream.hpp include/appcontext/OptionProcessor.hpp include/appcontext/ProgramFlow.hpp include/appcontext/string_utils.hpp include/appcontext/UIContext.hpp)
 
 target_link_libraries(bgenapp
@@ -92,6 +93,8 @@ add_executable(bgenix apps/bgenix.cpp)
 target_link_libraries(bgenix PRIVATE bgenapp PUBLIC bgenlib)
 target_include_directories(bgenix PUBLIC include)
 
+add_subdirectory(example)
+
 set(DEST_DIR "${CMAKE_INSTALL_PREFIX}")
 install(TARGETS sqlitecpp
   EXPORT bgen17
@@ -100,7 +103,7 @@ install(TARGETS sqlitecpp
   PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   )
-install(TARGETS bgenlib
+install(TARGETS bgenlib sqlitecpp
   EXPORT bgen17
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -113,6 +116,7 @@ install(TARGETS bgenix cat-bgen edit-bgen
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDDIR}"
         PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
         INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
 
 install(EXPORT bgen17
   FILE

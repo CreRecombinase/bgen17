@@ -12,7 +12,7 @@
 #include <cassert>
 #include <zlib.h>
 #include "zstd.h"
-#include "genfile/types.hpp"
+#include "types.hpp"
 
 namespace genfile {
 

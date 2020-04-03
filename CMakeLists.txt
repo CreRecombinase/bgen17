@@ -93,7 +93,7 @@ add_executable(bgenix apps/bgenix.cpp)
 target_link_libraries(bgenix PRIVATE bgenapp PUBLIC bgenlib)
 target_include_directories(bgenix PUBLIC include)
 
-add_subdirectory( "${CMAKE_SOURCE_DIR}/example")
+add_subdirectory("${PROJECT_SOURCE_DIR}/example")
 
 set(DEST_DIR "${CMAKE_INSTALL_PREFIX}")
 install(TARGETS sqlitecpp

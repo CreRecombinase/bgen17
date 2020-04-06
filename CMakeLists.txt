@@ -125,4 +125,8 @@ install(EXPORT bgen17
     bgen::
   DESTINATION
     ${CMAKE_INSTALL_LIBDIR}/cmake/bgen
-)
+    )
+
+set (PKGCONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+configure_file(bgen17.pc.in "${PROJECT_BINARY_DIR}/libbgen17.pc" @ONLY)
+install(FILES "${PROJECT_BINARY_DIR}/libbgen17.pc" DESTINATION "${PKGCONFIG_INSTALL_DIR}")

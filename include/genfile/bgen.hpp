@@ -16,9 +16,9 @@
 #include <limits>
 //#include "genfile/snp_data_utils.hpp"
 //#include "genfile/get_set.hpp"
-#include "../zlib.hpp"
-#include "../types.hpp"
-#include "../MissingValue.hpp"
+#include "zlib.hpp"
+#include "types.hpp"
+#include "MissingValue.hpp"
 
 /*
 * This file contains a reference implementation of the BGEN file format

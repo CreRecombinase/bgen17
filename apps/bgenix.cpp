@@ -16,12 +16,12 @@
 #include "appcontext/CmdLineOptionProcessor.hpp"
 #include "appcontext/ApplicationContext.hpp"
 #include "appcontext/get_current_time_as_string.hpp"
-#include "genfile/bgen/bgen.hpp"
+#include "genfile/bgen.hpp"
 #include "genfile/zlib.hpp"
 #include "db/Connection.hpp"
 #include "db/SQLStatement.hpp"
-#include "genfile/bgen/IndexQuery.hpp"
-#include "genfile/bgen/View.hpp"
+#include "genfile/IndexQuery.hpp"
+#include "genfile/View.hpp"
 #include "config.h"
 
 namespace bfs = boost::filesystem ;

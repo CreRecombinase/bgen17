@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <vector>
 #include <memory>
-#include "genfile/bgen/bgen.hpp"
+#include "genfile/bgen.hpp"
 
 // ProbSetter is a callback object appropriate for passing to bgen::read_genotype_data_block() or
 // the synonymous method of genfile::bgen::View. See the comment in bgen.hpp above

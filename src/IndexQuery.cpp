@@ -8,7 +8,7 @@
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include "db/sqlite3.hpp"
-#include "genfile/bgen/IndexQuery.hpp"
+#include "genfile/IndexQuery.hpp"
 
 // #define DEBUG 1
 

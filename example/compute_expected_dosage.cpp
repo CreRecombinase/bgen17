@@ -10,8 +10,8 @@
 #include <vector>
 #include <stdexcept>
 #include <memory>
-#include "genfile/bgen/bgen.hpp"
-#include "genfile/bgen/View.hpp"
+#include "genfile/bgen.hpp"
+#include "genfile/View.hpp"
 
 // DosageSetter is a callback object appropriate for passing to bgen::read_genotype_data_block() or
 // the synonymous method of genfile::bgen::View.

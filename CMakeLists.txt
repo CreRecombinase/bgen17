@@ -59,14 +59,14 @@ target_link_libraries(sqlitecpp INTERFACE Boost::headers)
 target_include_directories(sqlitecpp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 
 
-add_library(bgenlib src/bgen.cpp src/IndexQuery.cpp src/MissingValue.cpp src/View.cpp src/zlib.cpp include/genfile/bgen/bgen.hpp include/genfile/bgen/IndexQuery.hpp include/genfile/bgen/View.hpp)
+add_library(bgenlib src/bgen.cpp src/IndexQuery.cpp src/MissingValue.cpp src/View.cpp src/zlib.cpp include/genfile/bgen.hpp include/genfile/IndexQuery.hpp include/genfile/View.hpp)
 
 target_link_libraries(bgenlib
   PUBLIC Boost::date_time
   PUBLIC Boost::timer
   PUBLIC Boost::filesystem
   PUBLIC Boost::thread)
-set_target_properties(bgenlib PROPERTIES PUBLIC_HEADER "include/genfile/bgen/bgen.hpp;include/genfile/bgen/IndexQuery.hpp;include/genfile/bgen/View.hpp")
+set_target_properties(bgenlib PROPERTIES PUBLIC_HEADER "include/genfile/bgen.hpp;include/genfile/IndexQuery.hpp;include/genfile/View.hpp;include/genfile/MissingValue.hpp;include/genfile/types.hpp;include/genfile/zlib.hpp")
 target_link_libraries(bgenlib PUBLIC ZLIB::ZLIB)
 target_link_libraries(bgenlib PUBLIC PkgConfig::ZSTD)
 target_include_directories(bgenlib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)

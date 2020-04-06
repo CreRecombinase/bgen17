@@ -11,7 +11,7 @@
 #include <boost/format.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <algorithm>
-#include "genfile/bgen/bgen.hpp"
+#include "genfile/bgen.hpp"
 #include "appcontext/CmdLineOptionProcessor.hpp"
 #include "appcontext/ApplicationContext.hpp"
 #include "config.h"

@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <iomanip>
 #include "genfile/types.hpp"
-#include "genfile/bgen/bgen.hpp"
+#include "genfile/bgen.hpp"
 
 #ifdef CHAR_BIT
 #if (CHAR_BIT != 8)

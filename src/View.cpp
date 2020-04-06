@@ -13,9 +13,9 @@
 #include <boost/format.hpp>
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
-#include "genfile/bgen/bgen.hpp"
-#include "genfile/bgen/IndexQuery.hpp"
-#include "genfile/bgen/View.hpp"
+#include "genfile/bgen.hpp"
+#include "genfile/IndexQuery.hpp"
+#include "genfile/View.hpp"
 
 namespace genfile {
 	namespace bgen {

@@ -43,8 +43,16 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/CreRecombinase/sqlite-amalgamation
   )
 add_subdirectory(boost-cmake)
-FetchContent_MakeAvailable(zstd)
 
+
+FetchContent_GetProperties(zstd)
+if(NOT zstd_POPULATED)
+  FetchContent_Populate(zstd)
+  add_subdirectory("${zstd_SOURCE_DIR}/build/cmake" EXCLUDE_FROM_ALL)
+endif()
+
+target_include_directories(libzstd_static PUBLIC $<BUILD_INTERFACE:${zstd_SOURCE_DIR}/lib> $<INSTALL_INTERFACE:include>)
+set_target_properties(libzstd_static PROPERTIES PUBLIC_HEADER "${zstd_SOURCE_DIR}/lib/zstd.h")
 
 FetchContent_GetProperties(sqlite3)
 if(NOT sqlite3_POPULATED)
@@ -91,7 +99,8 @@ target_link_libraries(bgen
   PUBLIC Boost::thread)
 set_target_properties(bgen PROPERTIES PUBLIC_HEADER "include/genfile/bgen.hpp;include/genfile/IndexQuery.hpp;include/genfile/View.hpp;include/genfile/MissingValue.hpp;include/genfile/types.hpp;include/genfile/zlib.hpp")
 target_link_libraries(bgen PUBLIC ZLIB::ZLIB)
-target_link_libraries(bgen PUBLIC zstd)
+target_link_libraries(bgen PUBLIC libzstd_static)
+target_include_directories(bgen PUBLIC $<BUILD_INTERFACE:${zstd_SOURCE_DIR}/lib> $<INSTALL_INTERFACE:include>)
 target_include_directories(bgen PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 target_link_libraries(bgen PRIVATE sqlitecpp)
 
@@ -127,7 +136,7 @@ install(TARGETS sqlitecpp
   INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   )
 
-install(TARGETS bgen Boost_date_time Boost_timer Boost_filesystem Boost_thread Boost_chrono
+install(TARGETS bgen Boost_date_time Boost_timer Boost_filesystem Boost_thread Boost_chrono libzstd_static
   EXPORT bgen17
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"

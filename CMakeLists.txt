@@ -21,17 +21,33 @@ SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # which point to directories outside the build tree to the install RPATH
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-find_package(PkgConfig)
-find_package(PkgConfig QUIET)
-pkg_check_modules(ZSTD REQUIRED IMPORTED_TARGET GLOBAL libzstd)
+# find_package(PkgConfig)
+# find_package(PkgConfig QUIET)
+# pkg_check_modules(ZSTD REQUIRED IMPORTED_TARGET GLOBAL libzstd)
 
-# FetchContent_Declare(
-#   zstd
-#   GIT_REPOSITORY https://github.com/facebook/zstd.git
-#   SOURCE_SUBDIR "build/cmake/"
-#   )
+FetchContent_Declare(
+  zstd
+  GIT_REPOSITORY https://github.com/facebook/zstd.git
+  SOURCE_SUBDIR "build/cmake/"
+  )
 
-# FetchContent_MakeAvailable(zstd)
+
+
+FetchContent_Declare(
+  sqlite3
+  GIT_REPOSITORY https://github.com/CreRecombinase/sqlite-amalgamation
+  )
+
+FetchContent_MakeAvailable(zstd)
+
+FetchContent_GetProperties(sqlite3)
+if(NOT sqlite3_POPULATED)
+  FetchContent_Populate(sqlite3)
+  add_subdirectory(${sqlite3_SOURCE_DIR} ${sqlite3_BINARY_DIR})
+endif()
+
+
+
 # the RPATH to be used when installing, but only if it's not a system directory
 LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
 IF("${isSystemDir}" STREQUAL "-1")
@@ -43,10 +59,10 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 find_package(Boost REQUIRED COMPONENTS date_time filesystem chrono thread system timer)
 find_package(ZLIB REQUIRED)
 find_package(BZip2 REQUIRED)
-find_package(SQLite3 REQUIRED)
 
 
-add_library(sqlitecpp src/Connection.cpp src/Error.cpp src/SQLite3Connection.cpp src/SQLite3Statement.cpp src/SQLStatement.cpp include/db/Connection.hpp include/db/Error.hpp include/db/SQLite3Connection.hpp include/db/SQLite3Error.hpp include/db/sqlite3.hpp include/db/SQLite3Statement.hpp include/db/SQLStatement.hpp include/db/Transaction.hpp)
+
+add_library(sqlitecpp OBJECT src/Connection.cpp src/Error.cpp src/SQLite3Connection.cpp src/SQLite3Statement.cpp src/SQLStatement.cpp include/db/Connection.hpp include/db/Error.hpp include/db/SQLite3Connection.hpp include/db/SQLite3Error.hpp include/db/sqlite3.hpp include/db/SQLite3Statement.hpp include/db/SQLStatement.hpp include/db/Transaction.hpp)
 
 set_target_properties(sqlitecpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(sqlitecpp
@@ -54,43 +70,43 @@ target_compile_definitions(sqlitecpp
   INTERFACE SQLITE_ENABLE_STAT4
   INTERFACE SQLITE_MAX_EXPR_DEPTH=10000
   INTERFACE SQLITE_USE_URI=1)
-target_link_libraries(sqlitecpp INTERFACE SQLite::SQLite3)
-target_link_libraries(sqlitecpp INTERFACE Boost::headers)
-target_include_directories(sqlitecpp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
+target_link_libraries(sqlitecpp PRIVATE SQLite3)
+target_link_libraries(sqlitecpp PRIVATE Boost::headers)
+target_include_directories(sqlitecpp PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 
 
-add_library(bgenlib src/bgen.cpp src/IndexQuery.cpp src/MissingValue.cpp src/View.cpp src/zlib.cpp include/genfile/bgen.hpp include/genfile/IndexQuery.hpp include/genfile/View.hpp)
+add_library(bgen src/bgen.cpp src/IndexQuery.cpp src/MissingValue.cpp src/View.cpp src/zlib.cpp include/genfile/bgen.hpp include/genfile/IndexQuery.hpp include/genfile/View.hpp)
 
-target_link_libraries(bgenlib
+target_link_libraries(bgen
   PUBLIC Boost::date_time
   PUBLIC Boost::timer
   PUBLIC Boost::filesystem
   PUBLIC Boost::thread)
-set_target_properties(bgenlib PROPERTIES PUBLIC_HEADER "include/genfile/bgen.hpp;include/genfile/IndexQuery.hpp;include/genfile/View.hpp;include/genfile/MissingValue.hpp;include/genfile/types.hpp;include/genfile/zlib.hpp")
-target_link_libraries(bgenlib PUBLIC ZLIB::ZLIB)
-target_link_libraries(bgenlib PUBLIC PkgConfig::ZSTD)
-target_include_directories(bgenlib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
-target_link_libraries(bgenlib INTERFACE sqlitecpp)
+set_target_properties(bgen PROPERTIES PUBLIC_HEADER "include/genfile/bgen.hpp;include/genfile/IndexQuery.hpp;include/genfile/View.hpp;include/genfile/MissingValue.hpp;include/genfile/types.hpp;include/genfile/zlib.hpp")
+target_link_libraries(bgen PUBLIC ZLIB::ZLIB)
+target_link_libraries(bgen PUBLIC zstd)
+target_include_directories(bgen PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
+target_link_libraries(bgen PRIVATE sqlitecpp)
 
 # set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
-add_library(bgenapp src/ApplicationContext.cpp src/CmdLineUIContext.cpp src/get_current_time_as_string.cpp src/OptionProcessor.cpp src/progress_bar.cpp src/Timer.cpp src/CmdLineOptionProcessor.cpp src/OptionDefinition.cpp src/OstreamTee.cpp src/string_utils.cpp src/UIContext.cpp include/appcontext/appcontext.hpp include/appcontext/CmdLineOptionProcessor.hpp include/appcontext/get_current_time_as_string.hpp include/appcontext/OptionDefinition.hpp include/appcontext/OstreamTee.hpp include/appcontext/progress_bar.hpp include/appcontext/Timer.hpp include/appcontext/ApplicationContext.hpp include/appcontext/CmdLineUIContext.hpp include/appcontext/null_ostream.hpp include/appcontext/OptionProcessor.hpp include/appcontext/ProgramFlow.hpp include/appcontext/string_utils.hpp include/appcontext/UIContext.hpp)
+add_library(bgenapp OBJECT src/ApplicationContext.cpp src/CmdLineUIContext.cpp src/get_current_time_as_string.cpp src/OptionProcessor.cpp src/progress_bar.cpp src/Timer.cpp src/CmdLineOptionProcessor.cpp src/OptionDefinition.cpp src/OstreamTee.cpp src/string_utils.cpp src/UIContext.cpp include/appcontext/appcontext.hpp include/appcontext/CmdLineOptionProcessor.hpp include/appcontext/get_current_time_as_string.hpp include/appcontext/OptionDefinition.hpp include/appcontext/OstreamTee.hpp include/appcontext/progress_bar.hpp include/appcontext/Timer.hpp include/appcontext/ApplicationContext.hpp include/appcontext/CmdLineUIContext.hpp include/appcontext/null_ostream.hpp include/appcontext/OptionProcessor.hpp include/appcontext/ProgramFlow.hpp include/appcontext/string_utils.hpp include/appcontext/UIContext.hpp)
 
 target_link_libraries(bgenapp
-  PUBLIC Boost::headers
-  PUBLIC Boost::timer)
-target_include_directories(bgenapp PUBLIC include)
+  PRIVATE Boost::headers
+  PRIVATE Boost::timer)
+target_include_directories(bgenapp PRIVATE include)
 
 
 add_executable(cat-bgen apps/cat-bgen.cpp)
-target_link_libraries(cat-bgen PRIVATE bgenapp PUBLIC bgenlib)
+target_link_libraries(cat-bgen PRIVATE bgenapp PUBLIC bgen)
 target_include_directories(cat-bgen PUBLIC include)
 
 add_executable(edit-bgen apps/edit-bgen.cpp)
-target_link_libraries(edit-bgen PRIVATE bgenapp PUBLIC bgenlib)
+target_link_libraries(edit-bgen PRIVATE bgenapp PUBLIC bgen)
 target_include_directories(edit-bgen PUBLIC include)
 
 add_executable(bgenix apps/bgenix.cpp)
-target_link_libraries(bgenix PRIVATE bgenapp PUBLIC bgenlib)
+target_link_libraries(bgenix PRIVATE bgenapp PUBLIC bgen)
 target_include_directories(bgenix PUBLIC include)
 
 add_subdirectory("${PROJECT_SOURCE_DIR}/example")
@@ -103,7 +119,7 @@ install(TARGETS sqlitecpp
   PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   )
-install(TARGETS bgenlib
+install(TARGETS bgen
   EXPORT bgen17
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"

@@ -8,5 +8,5 @@ Description: @PROJECT_DESCRIPTION@
 Version: @PROJECT_VERSION@
 
 Requires:
-Libs: -L${libdir} -libbgenlib.a -libsqlitecpp.a
+Libs: -L${libdir} -lbgen
 Cflags: -I${includedir}

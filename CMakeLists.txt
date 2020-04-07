@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.15)
 project (bgen17 CXX)
 set(default_build_type "Release")
+set(CMAKE_CXX_STANDARD 11)
 include(FetchContent)
 include(GNUInstallDirs)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")

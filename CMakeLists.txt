@@ -31,6 +31,10 @@ FetchContent_Declare(
   SOURCE_SUBDIR "build/cmake/"
   )
 
+# FetchContent_Declare(
+#   bzip2
+#   https://github.com/sergiud/bzip2
+#   )
 
 
 FetchContent_Declare(
@@ -39,6 +43,7 @@ FetchContent_Declare(
   )
 add_subdirectory(boost-cmake)
 FetchContent_MakeAvailable(zstd)
+
 
 FetchContent_GetProperties(sqlite3)
 if(NOT sqlite3_POPULATED)
@@ -56,7 +61,7 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 
 find_package(ZLIB REQUIRED)
-find_package(BZip2 REQUIRED)
+# find_package(BZip2 REQUIRED)
 
 
 

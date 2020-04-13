@@ -15,19 +15,19 @@
 #include "bgen.hpp"
 #include "IndexQuery.hpp"
 
-namespace {
-	std::string to_string( std::size_t i ) {
-		std::stringstream s ;
-		s << i ;
-		return s.str() ;
-	}
-}
+// namespace {
+// 	std::string to_string( std::size_t i ) {
+// 		std::stringstream s ;
+// 		s << i ;
+// 		return s.str() ;
+// 	}
+// }
 
 namespace genfile {
 	namespace bgen {
 		struct View {
 		public:
-			typedef std::auto_ptr< View > UniquePtr ;
+			typedef std::unique_ptr< View > UniquePtr ;
 			typedef genfile::bgen::IndexQuery IndexQuery ;
 			typedef genfile::bgen::IndexQuery::FileMetadata FileMetadata ;
 
@@ -44,7 +44,7 @@ namespace genfile {
 			std::size_t number_of_samples() const ;
 			std::ostream& summarise( std::ostream& o ) const ;
 
-			// Report the sample IDs in the file using the given setter object
+			// Report the smaple IDs in the file using the given setter object
 			// (If there are no sample IDs in the file, report a dummy identifier).
 			// Setter object must be callable as setter( index of sample, sample identifier ).
 			template< typename Setter >
@@ -55,7 +55,7 @@ namespace genfile {
 					}
 				} else {
 					for( std::size_t i = 0; i < m_context.number_of_samples; ++i ) {
-						setter( "(anonymous_sample_" + to_string( i+1 ) + ")" ) ;
+                                          setter( "(anonymous_sample_" + std::to_string( i+1 ) + ")" ) ;
 					}
 				}
 			}
@@ -121,7 +121,7 @@ namespace genfile {
 
 		private:
 			std::string const m_filename ;
-			std::auto_ptr< std::istream > m_stream ;
+			std::unique_ptr< std::istream > m_stream ;
 			std::size_t m_variant_i ;
 			IndexQuery::UniquePtr m_index_query ;
 

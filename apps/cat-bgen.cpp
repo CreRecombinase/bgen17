@@ -7,9 +7,8 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
+#include <filesystem>
+#include <fmt/format.h>
 #include <algorithm>
 #include "genfile/bgen.hpp"
 #include "appcontext/CmdLineOptionProcessor.hpp"
@@ -77,13 +76,13 @@ public:
 		appcontext::ApplicationContext(
 			globals::program_name,
 			globals::program_version,
-			std::auto_ptr< appcontext::OptionProcessor >( new CatBgenOptionProcessor ),
+			std::make_unique<CatBgenOptionProcessor>(),
 			argc,
 			argv,
 			"-log"
 		)
 	{
-		if( !options().check( "-clobber" ) && boost::filesystem::exists( options().get< std::string >( "-og" ) ) ) {
+		if( !options().check( "-clobber" ) && std::filesystem::exists( options().get< std::string >( "-og" ) ) ) {
 			ui().logger() << "Output file \"" <<  options().get< std::string >( "-og" ) << "\" exists.  Use -clobber if you want me to overwrite it.\n" ;
 			throw appcontext::HaltProgramWithReturnCode( -1 ) ;
 		}
@@ -95,27 +94,28 @@ public:
 			throw appcontext::HaltProgramWithReturnCode( -1 ) ;
 		}
 		
-		boost::ptr_vector< std::istream > inputStreams ;
-		for( std::size_t i = 0; i < inputFilenames.size(); ++i ) {
-			
-			inputStreams.push_back(
-				std::auto_ptr< std::istream >(
-					new std::ifstream( inputFilenames[i], std::ios::binary )
-				)
-			) ;
-		}
+		std::vector<std::unique_ptr< std::ifstream >> inputStreams ;
+                std::transform(inputFilenames.begin(),inputFilenames.end(),std::back_inserter(inputStreams),[](const std::string & x){
+                  return std::make_unique<std::ifstream>(x,std::ios::binary);
+                });
+		// for( std::size_t i = 0; i < inputFilenames.size(); ++i ) {
+
+                //   inputStreams.emplace_back(std::make_unique<std::istream>(inputFilenames[i], std::ios::binary ));
+		// }
 		
 		std::ofstream outputStream( options().get< std::string > ( "-og" ).c_str(), std::ios::binary ) ;
 		genfile::bgen::Context result = concatenate( inputFilenames, inputStreams, outputStream ) ;
-		ui().logger() << boost::format( "Finished writing \"%s\" (%d samples, %d variants).\n" )
-			% options().get< std::string > ( "-og" ) % result.number_of_samples % result.number_of_variants ;
+		ui().logger() << fmt::format( "Finished writing \"{}\" ({} samples, {} variants).\n",
+                                              options().get< std::string > ( "-og" ) ,
+                                              result.number_of_samples ,
+                                              result.number_of_variants) ;
 	}
 
 private:
 
 	genfile::bgen::Context concatenate(
 		std::vector< std::string > const& inputFilenames,
-		boost::ptr_vector< std::istream >& inputFiles,
+		std::vector<std::unique_ptr< std::ifstream >>& inputFiles,
 		std::ofstream& outputFile
 	) const {
 		using namespace genfile ;
@@ -127,15 +127,18 @@ private:
 		// Deal with the first file, whose header we keep.
 		{	
 			uint32_t offset = 0 ;
-			bgen::read_offset( inputFiles[0], &offset ) ;
-			bgen::read_header_block( inputFiles[0], &resultContext ) ;
+			bgen::read_offset( *inputFiles[0], &offset ) ;
+			bgen::read_header_block( *inputFiles[0], &resultContext ) ;
 
-			ui().logger() << boost::format( "Adding file \"%s\" (%d of %d, %d variants)...\n" )
-				% inputFilenames[0] % 1 % inputFiles.size() % resultContext.number_of_variants ;
+			ui().logger() << fmt::format( "Adding file \"{}\" ({} of {}, {} variants)...\n",
+                                                      inputFilenames[0],
+                                                      1,
+                                                      inputFiles.size(),
+                                                      resultContext.number_of_variants);
 
 			if( options().check( "-omit-sample-identifier-block" )) {
 				resultContext.flags &= ~genfile::bgen::e_SampleIdentifiers ;
-				inputFiles[0].seekg( offset + 4 ) ;
+				inputFiles[0]->seekg( offset + 4 ) ;
 				offset = resultContext.header_size() ;
 			}
 
@@ -149,7 +152,7 @@ private:
 			bgen::write_offset( outputFile, offset ) ;
 			bgen::write_header_block( outputFile, resultContext ) ;
 
-			std::istreambuf_iterator< char > inIt( inputFiles[0] ) ;
+			std::istreambuf_iterator< char > inIt( *inputFiles[0] ) ;
 			std::istreambuf_iterator< char > endInIt ;
 
 			// Copy everything else
@@ -159,32 +162,33 @@ private:
 		for( std::size_t i = 1; i < inputFiles.size(); ++i ) {
 			bgen::Context context ;
 			uint32_t offset = 0 ;
-			bgen::read_offset( inputFiles[i], &offset ) ;
-			bgen::read_header_block( inputFiles[i], &context ) ;
+			bgen::read_offset( *inputFiles[i], &offset ) ;
+			bgen::read_header_block( *inputFiles[i], &context ) ;
 
-			ui().logger() << boost::format( "Adding file \"%s\" (%d of %d, %d variants)...\n" )
-				% inputFilenames[i] % (i+1) % inputFiles.size() % context.number_of_variants ;
+			ui().logger() << fmt::format( "Adding file \"{}\" ({} of {}, {} variants)...\n",
+                                                      inputFilenames[i],
+                                                      (i+1),
+                                                      inputFiles.size(),
+                                                      context.number_of_variants);
 
 			if( context.number_of_samples != resultContext.number_of_samples ) {
 				ui().logger()
-					<< boost::format( "Error: input file #%d ( \"%s\" ) has the wrong number of samples (%d, expected %d).  Quitting.\n" )
-						% (i+1) % inputFilenames[i] % context.number_of_samples % resultContext.number_of_samples
-				;
+					<< fmt::format( "Error: input file #{} ( \"{}\" ) has the wrong number of samples ({}, expected {}).  Quitting.\n"
+                                                        , (i+1) , inputFilenames[i] , context.number_of_samples , resultContext.number_of_samples);
 				throw appcontext::HaltProgramWithReturnCode( -1 ) ;
 			}
 			
 			if( context.flags != resultContext.flags ) {
 				ui().logger()
-					<< boost::format( "Error: input file #%d ( \"%s\" ) has the wrong flags (%x, expected %x).  Quitting.\n" )
-						% (i+1) % inputFilenames[i] % context.flags % resultContext.flags ;
+                                  << fmt::format( "Error: input file #{} ( \"{}\" ) has the wrong flags ({}, expected {}).  Quitting.\n",(i+1) , inputFilenames[i] , context.flags , resultContext.flags);
 				throw appcontext::HaltProgramWithReturnCode( -1 ) ;
 			}
 			
 			// Seek forwards to data
-			inputFiles[i].seekg( offset + 4 ) ;
+			inputFiles[i]->seekg( offset + 4 ) ;
 
 			// Copy all the data
-			std::istreambuf_iterator< char > inIt( inputFiles[i] ) ;
+			std::istreambuf_iterator< char > inIt( *inputFiles[i] ) ;
 			std::istreambuf_iterator< char > endInIt ;
 			std::copy( inIt, endInIt, outIt ) ;
 			

@@ -62,7 +62,7 @@ namespace appcontext {
 
 	void ProgressBarProgressContext::notify_progress(
 		std::size_t const count,
-		boost::optional< std::size_t > const total_count
+		std::optional< std::size_t > const total_count
 	) const {
 		double time_now = m_timer.elapsed() ;
 		if((count == 0) || (total_count && count == *total_count) || (time_now - m_last_time) > 1 ) {
@@ -84,7 +84,7 @@ namespace appcontext {
 
 	void ProgressBarProgressContext::print_progress(
 		std::size_t const count,
-		boost::optional< std::size_t > const total_count,
+		std::optional< std::size_t > const total_count,
 		std::string const& msg,
 		std::size_t const max_msg_length
 	) const {

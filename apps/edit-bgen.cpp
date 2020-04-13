@@ -7,9 +7,8 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
+#include <filesystem>
+#include <fmt/format.h>
 #include <algorithm>
 #include "genfile/bgen.hpp"
 #include "appcontext/CmdLineOptionProcessor.hpp"
@@ -24,6 +23,7 @@ namespace globals {
 
 struct EditBgenOptionProcessor: public appcontext::CmdLineOptionProcessor
 {
+
 public:
 	std::string get_program_name() const { return globals::program_name ; }
 
@@ -62,11 +62,12 @@ public:
 struct EditBgenApplication: public appcontext::ApplicationContext
 {
 public:
+  using fstream_ptr_vec = std::vector< std::unique_ptr<std::fstream> >;
 	EditBgenApplication( int argc, char** argv ):
 		appcontext::ApplicationContext(
 			globals::program_name,
 			globals::program_version,
-			std::auto_ptr< appcontext::OptionProcessor >( new EditBgenOptionProcessor ),
+			std::make_unique< appcontext::OptionProcessor >(EditBgenOptionProcessor{}),
 			argc,
 			argv,
 			"-log"
@@ -87,7 +88,7 @@ public:
 	
 	void unsafe_process() {
 		std::vector< std::string > filenames = options().get_values< std::string >( "-g" ) ;
-		std::auto_ptr< boost::ptr_vector< std::fstream > > streams  = open_bgen_files( filenames ) ;
+                auto streams  = open_bgen_files( filenames ) ;
 
 		bool somethingDone = false ;
 		if( options().check( "-set-free-data" )) {
@@ -106,30 +107,26 @@ public:
 		}
 	}
 	
-	std::auto_ptr< boost::ptr_vector< std::fstream > > open_bgen_files( std::vector< std::string > const& filenames ) const {
-		boost::ptr_vector< std::fstream > streams ;
-		for( std::size_t i = 0; i < filenames.size(); ++i ) {
-			streams.push_back(
-				std::auto_ptr< std::fstream >(
-					new std::fstream(
-						filenames[i].c_str(),
-						std::ios::in | std::ios::out | std::ios::binary
-					)
-				)
-			) ;
-		}
-		return streams.release() ;
-	}
+  std::unique_ptr< std::vector< std::unique_ptr<std::fstream> >> open_bgen_files( std::vector< std::string > const& filenames ) const {
+    std::unique_ptr<std::vector< std::unique_ptr<std::fstream> >> streams = std::make_unique<std::vector< std::unique_ptr<std::fstream> >>() ;
+    for( std::size_t i = 0; i < filenames.size(); ++i ) {
+      streams->emplace_back(std::make_unique<std::fstream>(filenames[i].c_str(),
+                                                           std::ios::in | std::ios::out | std::ios::binary
+                                                           )
+                            );
+    }
+    return std::move(streams);
+  }
 	
 	void edit_free_data(
 		std::vector< std::string > const& filenames,
-		boost::ptr_vector< std::fstream >& streams,
+		std::vector< std::unique_ptr<std::fstream> >& streams,
 		std::string const& free_data,
 		bool really
 	) const {
 		assert( filenames.size() == streams.size() ) ;
 		for( std::size_t i = 0; i < filenames.size(); ++i ) {
-			edit_free_data( filenames[i], streams[i], free_data, really ) ;
+			edit_free_data( filenames[i], *streams[i], free_data, really ) ;
 		}
 	}
 
@@ -139,7 +136,7 @@ public:
 		std::string const& free_data,
 		bool really
 	) const {
-		ui().logger() << boost::format( "Setting free data for \"%s\" to \"%s\"..." ) % filename % free_data ;
+          ui().logger() << fmt::format( "Setting free data for \"{}\" to \"{}\"...", filename , free_data) ;
 
 		// Read (and double-check) the header
 		// We checked this earlier, so assert if this fails.
@@ -147,10 +144,8 @@ public:
 		genfile::bgen::Context context ;
 		genfile::bgen::read_header_block( stream, &context ) ;
 		if( context.free_data.size() != free_data.size() ) {
-			ui().logger() << (
-				boost::format( "In bgen file \"%s\": size of new free data (%d bytes) does not match that of free data in file (\"%s\", %d bytes)." )
-					% filename % free_data.size() % context.free_data % context.free_data.size()
-			).str() ;
+			ui().logger() <<
+                                          fmt::format( "In bgen file \"{}\": size of new free data ({} bytes) does not match that of free data in file (\"{}\", %{} bytes).",filename, free_data.size(), context.free_data, context.free_data.size());
 			throw std::invalid_argument( "filename=\"" + filename + "\"" ) ;
 		}
 		
@@ -166,17 +161,17 @@ public:
 	
 	void remove_sample_identifiers(
 		std::vector< std::string > const& filenames,
-		boost::ptr_vector< std::fstream >& streams,
+		fstream_ptr_vec& streams,
 		bool really
 	) {
 		assert( filenames.size() == streams.size() ) ;
 		for( std::size_t i = 0; i < filenames.size(); ++i ) {
-			remove_sample_identifiers( filenames[i], streams[i], really ) ;
+			remove_sample_identifiers( filenames[i], *streams[i], really ) ;
 		}
 	}
 	
 	void remove_sample_identifiers( std::string const& filename, std::fstream& stream, bool really ) {
-		ui().logger() << boost::format( "Checking sample identifiers for \"%s\"..." ) % filename ;
+          ui().logger() << fmt::format( "Checking sample identifiers for \"{}\"..." ,filename) ;
 		uint32_t offset ;
 		genfile::bgen::Context context ;
 		genfile::bgen::read_offset( stream, &offset ) ;

@@ -8,7 +8,6 @@
 #include <cassert>
 #include <string>
 #include <exception>
-#include <boost/lexical_cast.hpp>
 #include "sqlite3.h"
 #include "db/SQLite3Connection.hpp"
 #include "db/SQLStatement.hpp"
@@ -53,7 +52,7 @@ namespace db {
 		assert( m_statement != 0 ) ;
 		int error = sqlite3_bind_int( m_statement, i, value ) ;
 		if( error != SQLITE_OK ) {
-			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, boost::lexical_cast<std::string>( i ) ) ;
+			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, std::to_string( i ) ) ;
 		}
 		return *this ;
 	}
@@ -62,7 +61,7 @@ namespace db {
 		assert( m_statement != 0 ) ;
 		int error = sqlite3_bind_int( m_statement, i, value ) ;
 		if( error != SQLITE_OK ) {
-			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, boost::lexical_cast<std::string>( i ) ) ;
+			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, std::to_string( i ) ) ;
 		}
 		return *this ;
 	}
@@ -71,7 +70,7 @@ namespace db {
 		assert( m_statement != 0 ) ;
 		int error = sqlite3_bind_int64( m_statement, i, sqlite3_int64( value ) ) ;
 		if( error != SQLITE_OK ) {
-			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, boost::lexical_cast<std::string>( i ) ) ;
+			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, std::to_string( i ) ) ;
 		}
 		return *this ;
 	}
@@ -80,7 +79,7 @@ namespace db {
 		assert( m_statement != 0 ) ;
 		int error = sqlite3_bind_int64( m_statement, i, sqlite3_int64( value ) ) ;
 		if( error != SQLITE_OK ) {
-			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, boost::lexical_cast<std::string>( i ) ) ;
+			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, std::to_string( i ) ) ;
 		}
 		return *this ;
 	}
@@ -89,7 +88,7 @@ namespace db {
 		assert( m_statement != 0 ) ;
 		int error = sqlite3_bind_double( m_statement, i, value ) ;
 		if( error != SQLITE_OK ) {
-			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, boost::lexical_cast<std::string>( i ) ) ;
+			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, std::to_string( i ) ) ;
 		}
 		return *this ;
 	}
@@ -98,7 +97,7 @@ namespace db {
 		assert( m_statement != 0 ) ;
 		int error = sqlite3_bind_text( m_statement, i, value.c_str(), value.size(), SQLITE_TRANSIENT ) ;
 		if( error != SQLITE_OK ) {
-			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, boost::lexical_cast<std::string>( i ) ) ;
+			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, std::to_string( i ) ) ;
 		}
 		return *this ;
 	}
@@ -107,7 +106,7 @@ namespace db {
 		assert( m_statement != 0 ) ;
 		int error = sqlite3_bind_blob( m_statement, i, reinterpret_cast< void const* >( buffer ), int( end - buffer ), SQLITE_TRANSIENT ) ;
 		if( error != SQLITE_OK ) {
-			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, boost::lexical_cast<std::string>( i ) ) ;
+			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, std::to_string( i ) ) ;
 		}
 		return *this ;
 	}
@@ -116,7 +115,7 @@ namespace db {
 		assert( m_statement != 0 ) ;
 		int error = sqlite3_bind_blob( m_statement, i, reinterpret_cast< void const* >( buffer ), int( end - buffer ), SQLITE_TRANSIENT ) ;
 		if( error != SQLITE_OK ) {
-			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, boost::lexical_cast<std::string>( i ) ) ;
+			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, std::to_string( i ) ) ;
 		}
 		return *this ;
 	}
@@ -125,7 +124,7 @@ namespace db {
 		assert( m_statement != 0 ) ;
 		int error = sqlite3_bind_null( m_statement, i ) ;
 		if( error != SQLITE_OK ) {
-			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, boost::lexical_cast<std::string>( i ) ) ;
+			throw ValueBindError( "SQLite3Statement::bind()", m_connection->get_spec(), error, std::to_string( i ) ) ;
 		}
 		return *this ;
 	}

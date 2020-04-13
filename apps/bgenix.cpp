@@ -9,10 +9,9 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/optional.hpp>
+#include <filesystem>
+#include <fmt/format.h>
+#include <optional>
 #include "appcontext/CmdLineOptionProcessor.hpp"
 #include "appcontext/ApplicationContext.hpp"
 #include "appcontext/get_current_time_as_string.hpp"
@@ -24,7 +23,7 @@
 #include "genfile/View.hpp"
 #include "config.h"
 
-namespace bfs = boost::filesystem ;
+namespace bfs = std::filesystem ;
 
 // #define DEBUG 1
 
@@ -165,7 +164,7 @@ typedef uint8_t byte_t ;
 // Throw std::invalid_argument error if they mismatch, otherwise return the index.
 void check_metadata(
 	genfile::bgen::IndexQuery::FileMetadata const& file,
-	boost::optional< genfile::bgen::IndexQuery::FileMetadata > const& index
+	std::optional< genfile::bgen::IndexQuery::FileMetadata > const& index
 ) {
 	if( index ) {
 		if( file.size != (*index).size ) {
@@ -196,7 +195,7 @@ public:
 		appcontext::ApplicationContext(
 			globals::program_name,
 			globals::program_version + ", revision " + globals::program_revision,
-			std::auto_ptr< appcontext::OptionProcessor >( new IndexBgenOptionProcessor ),
+			std::make_unique<IndexBgenOptionProcessor>(),
 			argc,
 			argv,
 			"-log"
@@ -242,7 +241,7 @@ private:
 	void create_bgen_index_unsafe( std::string const& bgen_filename, std::string const& index_filename ) {
 		db::Connection::UniquePtr result ;
 		ui().logger()
-			<< boost::format( "%s: creating index for \"%s\" in \"%s\"...\n" ) % globals::program_name % bgen_filename % index_filename ;
+                  << fmt::format( "{}: creating index for \"{}\" in \"{}\"...\n" , globals::program_name , bgen_filename , index_filename) ;
 
 		if( bfs::exists( index_filename + ".tmp" ) && !options().check( "-clobber" ) ) {
 			throw std::invalid_argument( "Error: an incomplete index file \"" + (index_filename + ".tmp") + "\" already exists.\n"
@@ -297,7 +296,7 @@ private:
 			.step() ;
 
 		ui().logger()
-			<< boost::format( "%s: Opened \"%s\" with %d variants...\n" ) % globals::program_name % bgen_filename % bgenView.number_of_variants() ;
+                  << fmt::format( "{}: Opened \"{}\" with {} variants...\n"  , globals::program_name , bgen_filename ,bgenView.number_of_variants());
 		
 		std::string chromosome, rsid, SNPID ;
 		uint32_t position ;
@@ -421,7 +420,7 @@ private:
 			|| options().check( "-v11" ) ;
 
 		if( transcode ) {
-			bgenView.set_query( query ) ;
+                  bgenView.set_query( std::move(query) ) ;
 			if( options().check( "-list" ) ) {
 				process_selection_list( bgenView ) ;
 			} else if( options().check( "-vcf" )) {
@@ -432,7 +431,7 @@ private:
 		} else {
 			// When not transcoding we skip BgenParser and use the bgen file directly.
 			check_metadata( bgenView.file_metadata(), query->file_metadata() ) ;
-			process_selection_notranscode( bgen_filename, query ) ;
+			process_selection_notranscode( bgen_filename, std::move(query) ) ;
 		}
 	}
 
@@ -473,19 +472,26 @@ private:
 			auto progress_context = ui().get_progress_context( "Building query" ) ;
 			query->initialise( progress_context ) ;
 		}
-		return( genfile::bgen::IndexQuery::UniquePtr( query.release() )) ; // Using std::auto_ptr so we need these gymnastics
+		return( genfile::bgen::IndexQuery::UniquePtr( query.release() )) ; // Using std::unique_ptr so we need these gymnastics
 	}
 	
 	std::vector< std::string > collect_unique_ids( std::vector< std::string > const& ids_or_filenames ) const {
 		std::vector< std::string > result ;
+                std::string str;
+                //TODO: test this change
 		for( auto elt: ids_or_filenames ) {
 			if( bfs::exists( elt )) {
 				std::ifstream f( elt ) ;
-				std::copy(
-					std::istream_iterator< std::string >( f ),
-					std::istream_iterator< std::string >(),
-					std::back_inserter< std::vector< std::string > >( result )
-				) ;
+                                str.reserve(f.tellg());
+                                f.seekg(0, std::ios::beg);
+                                str.assign((std::istreambuf_iterator<char>(f)),
+                                           std::istreambuf_iterator<char>());
+                                result.push_back(str);
+				// std::copy(
+				// 	std::istream_iterator< std::string >( f ),
+				// 	std::istream_iterator< std::string >(),
+				// 	std::back_inserter< std::vector< std::string > >( result )
+				//) ;
 			} else {
 				result.push_back( elt ) ;
 			}
@@ -528,11 +534,11 @@ private:
 				progress_context( i+1, index->number_of_variants() ) ;
 			}
 		}
-		std::cerr << boost::format( "%s: wrote data for %d variants to stdout.\n" ) % globals::program_name % index->number_of_variants() ;
+		std::cerr << fmt::format( "{}: wrote data for {} variants to stdout.\n"  , globals::program_name , index->number_of_variants()) ;
 	}
 	
 	void process_selection_list( genfile::bgen::View& bgenView ) const {
-		std::cout << boost::format( "# %s: started %s\n" ) % globals::program_name % appcontext::get_current_time_as_string() ;
+          std::cout << fmt::format( "# {}: started {}\n" ,  globals::program_name  ,appcontext::get_current_time_as_string()) ;
 		std::cout << "alternate_ids\trsid\tchromosome\tposition\tnumber_of_alleles\tfirst_allele\talternative_alleles\n" ;
 		
 		std::string SNPID, rsid, chromosome ;
@@ -559,7 +565,7 @@ private:
 			}
 			bgenView.ignore_genotype_data_block() ;
 		}
-		std::cout << boost::format( "# %s: success, total %d variants.\n" ) % globals::program_name % bgenView.number_of_variants() ;
+		std::cout << fmt::format( "# {}: success, total {} variants.\n" ,  globals::program_name , bgenView.number_of_variants());
 	}
 
 	void process_selection_transcode(
@@ -1047,8 +1053,8 @@ private:
 						assert( key < probability_encoding_table.size() ) ;
 						uint64_t const value = probability_encoding_table[ *reinterpret_cast< uint16_t const* >( buffer ) ] ;
 #if DEBUG
-						std::cerr << ( boost::format( "%d, %d" ) % key % probability_encoding_table.size() ) << "\n" ;
-						std::cerr << ( boost::format( "%x: %x" ) % key % value ) << "\n" ;
+						std::cerr << fmt::format( "{}, {}"  , key , probability_encoding_table.size() ) << "\n" ;
+						std::cerr << fmt::format( "{}: {}" ,  key , value ) << "\n" ;
 						std::cerr << "Input: " << uint64_t(*reinterpret_cast< uint8_t const* >( buffer )) << ", " << uint64_t(*reinterpret_cast< uint8_t const* >( buffer+1 )) << "\n" ;
 						std::cerr << "Output: " << uint64_t( value & 0xFFFF) << ", " << uint64_t( (value>>16) & 0xFFFF) << ", " << uint64_t( (value>>32) & 0xFFFF) << ".\n" ;
 #endif
@@ -1069,7 +1075,7 @@ private:
 					compressionLevel
 				) ;
 #if DEBUG
-				std::cerr << ( boost::format( "serialisation buffer: %d, id data Buffer: %d, result buffer: %d" ) % serialisationBuffer.size() % idDataBuffer.size() % compressionBuffer.size() ) << "\n" ;
+				std::cerr << fmt::format( "serialisation buffer: {}, id data Buffer: {}, result buffer: {}"  , serialisationBuffer.size() , idDataBuffer.size() , compressionBuffer.size() ) << "\n" ;
 #endif
 				std::ostreambuf_iterator< char > outIt( std::cout ) ;
 				std::copy( &idDataBuffer[0], &idDataBuffer[0]+idDataBuffer.size(), outIt ) ;
@@ -1082,7 +1088,7 @@ private:
 			}
 		}
 		
-		std::cerr << boost::format( "# %s: success, total %d variants.\n" ) % globals::program_name % bgenView.number_of_variants() ;
+		std::cerr << fmt::format( "# {}: success, total {} variants.\n" ,  globals::program_name , bgenView.number_of_variants()) ;
 	}
 	
 	std::vector< uint64_t > compute_bgen_v11_probability_encoding_table() const {

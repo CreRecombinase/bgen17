@@ -27,7 +27,7 @@ namespace appcontext {
 		void remove_progress_context_impl( std::string const& name ) ;
 	private:
 		mutable std::map< std::string, ProgressContextImpl* > m_progress_contexts ;
-		std::auto_ptr< OstreamTee > m_logger ;
+		std::unique_ptr< OstreamTee > m_logger ;
 	} ;
 
 
@@ -38,7 +38,7 @@ namespace appcontext {
 
 		void notify_progress(
 			std::size_t const count,
-			boost::optional< std::size_t > const total_count
+			std::optional< std::size_t > const total_count
 		) const ;
 
 		void notify_progress() const ;
@@ -54,7 +54,7 @@ namespace appcontext {
 	private:
 		void print_progress(
 			std::size_t const count,
-			boost::optional< std::size_t > const total_count,
+			std::optional< std::size_t > const total_count,
 			std::string const& msg,
 			std::size_t max_msg_length
 		) const ;
@@ -65,7 +65,7 @@ namespace appcontext {
 		mutable double m_last_time ;
 		
 		mutable std::size_t m_last_count ;
-		mutable boost::optional< std::size_t > m_last_total_count ;
+		mutable std::optional< std::size_t > m_last_total_count ;
 	} ;
 }
 

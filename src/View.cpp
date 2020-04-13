@@ -4,15 +4,16 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
+#include <chrono>
 #include <memory>
 #include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <boost/tuple/tuple.hpp>
-#include <boost/format.hpp>
-#include <boost/bind.hpp>
-#include <boost/filesystem.hpp>
+
+#include <fmt/format.h>
+#include <filesystem>
+#include <sys/stat.h>
 #include "genfile/bgen.hpp"
 #include "genfile/IndexQuery.hpp"
 #include "genfile/View.hpp"
@@ -39,7 +40,7 @@ namespace genfile {
 		}
 
 		void View::set_query( IndexQuery::UniquePtr query ) {
-			m_index_query = query ;
+                  m_index_query = std::move(query) ;
 			if( m_index_query->number_of_variants() > 0 ) {
 				m_stream->seekg( m_index_query->locate_variant(0).first ) ;
 			}
@@ -122,10 +123,8 @@ namespace genfile {
 				genfile::bgen::read_snp_identifying_data(
 					*m_stream, m_context,
 					SNPID, rsid, chromosome, position,
-//					[&alleles]( std::size_t n ) { alleles->resize( n ) ; },
-					boost::bind( &resize_vector, alleles, _1 ),
-//					[&alleles]( std::size_t i, std::string const& allele ) { alleles->at(i) = allele ; }
-					boost::bind( &set_vector_element, alleles, _1, _2 )
+					[alleles]( std::size_t n ) { alleles->resize( n ) ; },
+					[alleles]( std::size_t i, std::string const& allele ) { alleles->at(i) = allele ; }
 				)
 			) {
 				m_state = e_ReadyForProbs ;
@@ -165,7 +164,10 @@ namespace genfile {
 		// Open the bgen file, read header data and gather metadata.
 		void View::setup( std::string const& filename ) {
 			m_file_metadata.filename = filename ;
-			m_file_metadata.last_write_time = boost::filesystem::last_write_time( filename ) ;
+                        struct stat mtstat{};
+                        auto ret = stat(filename.c_str(),&mtstat);
+                        auto lwt = mtstat.st_mtim.tv_sec;
+                        m_file_metadata.last_write_time = lwt;
 
 			// Open the stream
 			m_stream.reset(
@@ -200,8 +202,7 @@ namespace genfile {
 			if( m_context.flags & genfile::bgen::e_SampleIdentifiers ) {
 				genfile::bgen::read_sample_identifier_block(
 					*m_stream, m_context,
-					boost::bind( &push_back_vector, &m_sample_ids, _1 )
-					//[this]( std::string id ) { m_sample_ids.push_back( id ) ; }
+					[this]( std::string id ) { m_sample_ids.push_back( id ) ; }
 				) ;
 				m_have_sample_ids = true ;
 			}
@@ -212,11 +213,8 @@ namespace genfile {
 			if( m_stream->gcount() != m_postheader_data.size() ) {
 				throw std::invalid_argument(
 					(
-						boost::format(
-							"BGEN file (\"%s\") appears malformed - offset specifies more bytes (%d) than are in the file."
-						) % filename % m_offset
-					).str()
-				) ;
+                                         "BGEN file ("+filename+"\") appears malformed - offset specifies more bytes ("+std::to_string(m_offset)+") than are in the file."
+                                         )) ;
 			}
 
 			// Jump to the first variant data block.

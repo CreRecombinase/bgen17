@@ -9,16 +9,17 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include <boost/timer/timer.hpp>
 #include "appcontext/Timer.hpp"
 
 namespace appcontext {
 	double Timer::elapsed() const {
-		return double( m_boost_timer.elapsed().wall ) / 1000000000.0 ;
+          std::chrono::duration<double> diff = std::chrono::system_clock::now()-now_pt;
+          double ct = diff.count();
+          return ct / 1000000000.0 ;
 	}
 	
 	void Timer::restart() {
-		m_boost_timer.start() ;
+          now_pt=std::chrono::system_clock::now();
 	}
 	
 	std::string Timer::display() const {

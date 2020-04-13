@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.15)
 project (bgen17 CXX)
 set(default_build_type "Release")
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 include(FetchContent)
 include(GNUInstallDirs)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
@@ -26,6 +26,14 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # find_package(PkgConfig QUIET)
 # pkg_check_modules(ZSTD REQUIRED IMPORTED_TARGET GLOBAL libzstd)
 
+
+FetchContent_Declare(
+  fmtlib
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+)
+FetchContent_MakeAvailable(fmtlib)
+
+
 FetchContent_Declare(
   zstd
   GIT_REPOSITORY https://github.com/facebook/zstd.git
@@ -42,7 +50,7 @@ FetchContent_Declare(
   sqlite3
   GIT_REPOSITORY https://github.com/CreRecombinase/sqlite-amalgamation
   )
-add_subdirectory(boost-cmake)
+# add_subdirectory(boost-cmake)
 
 
 FetchContent_GetProperties(zstd)
@@ -78,26 +86,23 @@ add_library(sqlitecpp OBJECT src/Connection.cpp src/Error.cpp src/SQLite3Connect
 
 set_target_properties(sqlitecpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(sqlitecpp
-  INTERFACE BOOST_THREAD_USES_DATETIME
   INTERFACE SQLITE_ENABLE_COLUMN_METADATA
   INTERFACE SQLITE_ENABLE_STAT4
   INTERFACE SQLITE_MAX_EXPR_DEPTH=10000
   INTERFACE SQLITE_USE_URI=1)
 target_link_libraries(sqlitecpp PRIVATE SQLite3)
-target_link_libraries(sqlitecpp PRIVATE Boost::boost)
+
+# target_link_libraries(sqlitecpp PRIVATE Boost::boost)
 target_include_directories(sqlitecpp PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 
 
 add_library(bgen src/bgen.cpp src/IndexQuery.cpp src/MissingValue.cpp src/View.cpp src/zlib.cpp include/genfile/bgen.hpp include/genfile/IndexQuery.hpp include/genfile/View.hpp)
 
-target_compile_definitions(bgen
-  INTERFACE BOOST_THREAD_USES_DATETIME)
-target_link_libraries(bgen
-  PUBLIC Boost::date_time
-  PUBLIC Boost::timer
-  PUBLIC Boost::filesystem
-  PUBLIC Boost::thread)
+# target_compile_definitions(bgen INTERFACE BOOST_THREAD_USES_DATETIME)
+# target_link_libraries(bgen
+#   PUBLIC Boost::timer)
 set_target_properties(bgen PROPERTIES PUBLIC_HEADER "include/genfile/bgen.hpp;include/genfile/IndexQuery.hpp;include/genfile/View.hpp;include/genfile/MissingValue.hpp;include/genfile/types.hpp;include/genfile/zlib.hpp")
+target_link_libraries(bgen PRIVATE fmt::fmt)
 target_link_libraries(bgen PUBLIC ZLIB::ZLIB)
 target_link_libraries(bgen PUBLIC libzstd_static)
 target_include_directories(bgen PUBLIC $<BUILD_INTERFACE:${zstd_SOURCE_DIR}/lib> $<INSTALL_INTERFACE:include>)
@@ -108,8 +113,7 @@ target_link_libraries(bgen PRIVATE sqlitecpp)
 add_library(bgenapp OBJECT src/ApplicationContext.cpp src/CmdLineUIContext.cpp src/get_current_time_as_string.cpp src/OptionProcessor.cpp src/progress_bar.cpp src/Timer.cpp src/CmdLineOptionProcessor.cpp src/OptionDefinition.cpp src/OstreamTee.cpp src/string_utils.cpp src/UIContext.cpp include/appcontext/appcontext.hpp include/appcontext/CmdLineOptionProcessor.hpp include/appcontext/get_current_time_as_string.hpp include/appcontext/OptionDefinition.hpp include/appcontext/OstreamTee.hpp include/appcontext/progress_bar.hpp include/appcontext/Timer.hpp include/appcontext/ApplicationContext.hpp include/appcontext/CmdLineUIContext.hpp include/appcontext/null_ostream.hpp include/appcontext/OptionProcessor.hpp include/appcontext/ProgramFlow.hpp include/appcontext/string_utils.hpp include/appcontext/UIContext.hpp)
 
 target_link_libraries(bgenapp
-  PUBLIC Boost::boost
-  PUBLIC Boost::timer)
+  PUBLIC fmt)
 target_include_directories(bgenapp PRIVATE include)
 
 
@@ -127,6 +131,31 @@ target_include_directories(bgenix PUBLIC include)
 
 add_subdirectory("${PROJECT_SOURCE_DIR}/example")
 
+
+
+# if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+add_subdirectory(test)
+# endif()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 set(DEST_DIR "${CMAKE_INSTALL_PREFIX}")
 install(TARGETS sqlitecpp
   EXPORT bgen17
@@ -136,7 +165,7 @@ install(TARGETS sqlitecpp
   INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   )
 
-install(TARGETS bgen Boost_date_time Boost_timer Boost_filesystem Boost_thread Boost_chrono libzstd_static
+install(TARGETS bgen libzstd_static fmt
   EXPORT bgen17
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -150,6 +179,11 @@ install(TARGETS bgenix cat-bgen edit-bgen
         PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
         INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
+      # if(NOT boost_SOURCE_DIR)
+
+
+# install(DIRECTORY "${Boost-CMake_BINARY_DIR}/boost/"
+#         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/boost")
 
 install(EXPORT bgen17
   FILE
@@ -162,4 +196,4 @@ install(EXPORT bgen17
 
 set (PKGCONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 configure_file(bgen17.pc.in "${PROJECT_BINARY_DIR}/libbgen17.pc" @ONLY)
-install(FILES "${PROJECT_BINARY_DIR}/libbgen17.pc" DESTINATION "${PKGCONFIG_INSTALL_DIR}")
+# install(FILES "${PROJECT_BINARY_DIR}/libbgen17.pc" DESTINATION "${PKGCONFIG_INSTALL_DIR}")

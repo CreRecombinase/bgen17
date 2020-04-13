@@ -4,17 +4,13 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef DB_TRANSACTION_HPP
-#define DB_TRANSACTION_HPP
+#include <string>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include "test_utils.hpp"
 
-#include <memory>
-
-namespace db {
-	class Transaction {
-	public:
-		typedef std::unique_ptr< Transaction > UniquePtr ;
-		virtual ~Transaction() {}
-	} ;
+std::string to_hex( std::string const& str ) {
+	return to_hex( str.data(), str.data() + str.size() ) ;
 }
 
-#endif

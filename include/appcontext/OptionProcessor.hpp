@@ -17,7 +17,7 @@
 #include <iomanip>
 #include <cassert>
 #include <memory>
-#include <boost/function.hpp>
+#include <functional>
 #include "appcontext/OptionDefinition.hpp"
 
 namespace appcontext {
@@ -93,7 +93,7 @@ namespace appcontext {
 
 	class OptionProcessor {
 		public:
-			typedef std::auto_ptr< OptionProcessor > UniquePtr ;
+			typedef std::unique_ptr< OptionProcessor > UniquePtr ;
 			typedef std::map< std::string, OptionDefinition > OptionDefinitions ;
 			typedef std::map< std::string, std::vector< std::string > > OptionValues ; 
 			typedef std::map< std::string, std::pair< std::vector< std::string >, std::string > > OptionValueMap ;
@@ -178,7 +178,7 @@ namespace appcontext {
 
 		public:
 			// checks
-			typedef boost::function< void ( OptionProcessor& ) > Check ;
+			typedef std::function< void ( OptionProcessor& ) > Check ;
 			void add_check( Check check ) ;
 
 			void check_equal_multiplicity( std::string const& option1, std::string const& option2 ) ;

@@ -10,7 +10,7 @@
 
 namespace db {
 	Connection::UniquePtr Connection::create( std::string const& filename, std::string const& mode ) {
-		return Connection::UniquePtr( new SQLite3Connection( filename, true, mode )) ;
+          return std::make_unique<SQLite3Connection>( filename, true, mode ) ;
 	}
 
 	void Connection::run_statement( std::string const& SQL ) {

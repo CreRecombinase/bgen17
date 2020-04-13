@@ -114,15 +114,15 @@ namespace appcontext {
 	}
 
 	namespace {
-		std::auto_ptr< std::ostream > open_file_for_output( std::string const& filename ) {
+		std::unique_ptr< std::ostream > open_file_for_output( std::string const& filename ) {
 			std::ios_base::openmode open_mode = std::ios_base::out ;
 
-			std::auto_ptr< std::ostream > result( new std::ofstream( filename, open_mode )) ;
+			std::unique_ptr< std::ostream > result( new std::ofstream( filename, open_mode )) ;
 			if( !(*result) ) {
 				throw std::runtime_error( "open_file_for_output(): could not open file \"" + filename + "\"." ) ;
 			}
 
-			return std::auto_ptr< std::ostream >( result.release() ) ;
+			return std::unique_ptr< std::ostream >( result.release() ) ;
 		}
 	}
 

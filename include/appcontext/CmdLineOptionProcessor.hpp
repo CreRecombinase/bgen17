@@ -11,8 +11,8 @@
 #include <map>
 #include <set>
 
-#include "appcontext/ProgramFlow.hpp"
-#include "appcontext/OptionProcessor.hpp"
+#include "ProgramFlow.hpp"
+#include "OptionProcessor.hpp"
 
 namespace appcontext {
 	struct CmdLineOptionProcessor: public OptionProcessor {

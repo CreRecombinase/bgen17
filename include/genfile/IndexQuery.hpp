@@ -7,28 +7,27 @@
 #ifndef BGEN_INDEX_QUERY_HPP
 #define BGEN_INDEX_QUERY_HPP
 
-#include <boost/function.hpp>
-#include <boost/optional.hpp>
 #include <stdint.h>
 #include <vector>
 #include <string>
 #include <ctime>
+#include <optional>
+#include <sys/stat.h>
 #include "db/sqlite3.hpp"
+#include <filesystem>
 
 namespace genfile {
 	namespace bgen {
 		// Base class representing a query against a BGEN file index
 		struct IndexQuery {
 		public:
-			// We use std::auto_ptr to avoid using C++11 features here.
-			typedef std::auto_ptr< IndexQuery > UniquePtr ;
+			// We use std::unique_ptr to avoid using deprecated auto_ptr features here.
+			typedef std::unique_ptr< IndexQuery > UniquePtr ;
 			typedef uint8_t byte_t ;
-
 			static UniquePtr create( std::string const& filename, std::string const& table_name = "Variant" ) ;
-
 		public:
 			struct FileMetadata ;
-			typedef boost::optional< FileMetadata > OptionalFileMetadata ;
+			typedef std::optional< FileMetadata > OptionalFileMetadata ;
 			struct GenomicRange {
 				GenomicRange(): m_start(0), m_end(0) {}
 				GenomicRange( GenomicRange const& other ):
@@ -68,7 +67,7 @@ namespace genfile {
 			} ;
 			//typedef boost::tuple< std::string, uint32_t, uint32_t > GenomicRange ;
 			typedef std::pair< int64_t, int64_t> FileRange ;
-			typedef boost::function< void ( std::size_t n, boost::optional< std::size_t > total ) > ProgressCallback ;
+			typedef std::function< void ( std::size_t n, std::optional< std::size_t > total ) > ProgressCallback ;
 
 		public:
 			virtual ~IndexQuery() {} ;
@@ -110,7 +109,7 @@ namespace genfile {
 
 				std::string filename ;
 				int64_t size ;
-				std::time_t last_write_time ;
+				time_t last_write_time ;
 				std::vector< byte_t > first_bytes ;
 			} ;
 		} ;
@@ -118,8 +117,8 @@ namespace genfile {
 		// Class for index queries implemented using a sqlite file, a la bgenix.
 		struct SqliteIndexQuery: public IndexQuery {
 		public:
-			// We use auto_ptr to avoid using C++11 features here.
-			typedef std::auto_ptr< SqliteIndexQuery > UniquePtr ;
+			// We use unique_ptr to avoid using C++11 features here.
+			typedef std::unique_ptr< SqliteIndexQuery > UniquePtr ;
 
 		public:
 			// Construct given an index file and an index table name

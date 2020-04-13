@@ -9,7 +9,7 @@
 #include "appcontext/OstreamTee.hpp"
 #include "appcontext/progress_bar.hpp"
 #include "appcontext/CmdLineUIContext.hpp"
-
+#include <optional>
 namespace appcontext {
 	ProgressContextProxy::ProgressContextProxy( UIContext& ui_context, ProgressContextImpl const& progress_context )
 		: m_ui_context( &ui_context ),
@@ -39,7 +39,7 @@ namespace appcontext {
 
 	void ProgressContextProxy::notify_progress(
 		std::size_t const count,
-		boost::optional< std::size_t > const total_count
+		std::optional< std::size_t > const total_count
 	) const {
 		assert( m_progress_context ) ;
 		m_progress_context->notify_progress( count, total_count ) ;

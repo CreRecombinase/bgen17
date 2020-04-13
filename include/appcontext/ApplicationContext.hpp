@@ -9,7 +9,7 @@
 
 #include <memory>
 #include <string>
-#include <boost/function.hpp>
+
 #include "appcontext/OptionProcessor.hpp"
 #include "appcontext/Timer.hpp"
 #include "appcontext/OstreamTee.hpp"
@@ -21,7 +21,7 @@ namespace appcontext {
 	{
 	public:
 		typedef appcontext::UIContext UIContext ;
-		typedef boost::function< void( appcontext::OptionProcessor const& ) > OptionChecker ;
+		typedef std::function< void( appcontext::OptionProcessor const& ) > OptionChecker ;
 	public:
 		ApplicationContext(
 			std::string const& application_name,

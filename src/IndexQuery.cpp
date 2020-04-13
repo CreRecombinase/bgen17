@@ -5,8 +5,8 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include <memory>
-#include <boost/format.hpp>
-#include <boost/optional.hpp>
+#include <fmt/format.h>
+#include <optional>
 #include "db/sqlite3.hpp"
 #include "genfile/IndexQuery.hpp"
 
@@ -26,7 +26,7 @@ namespace genfile {
 		{
 		}
 	
-		boost::optional< SqliteIndexQuery::FileMetadata > const&
+		std::optional< SqliteIndexQuery::FileMetadata > const&
 		SqliteIndexQuery::file_metadata() const {
 			return m_metadata ;
 		}
@@ -34,7 +34,7 @@ namespace genfile {
 		void SqliteIndexQuery::initialise( ProgressCallback callback ) {
 			db::Connection::StatementPtr stmt = build_query() ;
 			if( callback ) {
-				callback( 0, boost::optional< std::size_t >() ) ;
+				callback( 0, std::optional< std::size_t >() ) ;
 			}
 			m_positions.reserve( 1000000 ) ;
 			std::size_t batch_i = 0 ;
@@ -45,7 +45,7 @@ namespace genfile {
 				assert( size >= 0 ) ;
 				m_positions.push_back( std::make_pair( int64_t( pos ), int64_t( size ))) ;
 				if( callback ) {
-					callback( m_positions.size(), boost::optional< std::size_t >() ) ;
+					callback( m_positions.size(), std::optional< std::size_t >() ) ;
 				}
 			}
 	#if DEBUG
@@ -71,17 +71,14 @@ namespace genfile {
 
 		SqliteIndexQuery& SqliteIndexQuery::include_range( GenomicRange const& range ) {
 			m_query_parts.inclusion += ((m_query_parts.inclusion.size() > 0) ? " OR " : "" ) + (
-				boost::format( "( chromosome == '%s' AND position BETWEEN %d AND %d )" ) % range.chromosome() % range.start() % range.end()
-			).str() ;
+                                                                                                            "( chromosome == '"+range.chromosome()+"' AND position BETWEEN "+std::to_string(range.start())+" AND "+std::to_string(range.end())+")" ) ;
 			m_initialised = false ;
 			return *this ;
 		}
 
 		SqliteIndexQuery& SqliteIndexQuery::exclude_range( GenomicRange const& range ) {
 			m_query_parts.exclusion += ( m_query_parts.exclusion.size() > 0 ? " AND" : "" ) + (
-				boost::format( " NOT ( chromosome == '%s' AND position BETWEEN %d AND %d )" )
-					% range.chromosome() % range.start() % range.end()
-			).str() ;
+                                                                                                           " NOT ( chromosome == '"+range.chromosome()+"' AND position BETWEEN "+std::to_string(range.start())+" AND "+std::to_string(range.end())+" )" );
 			m_initialised = false ;
 			return *this ;
 		}

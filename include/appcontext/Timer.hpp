@@ -7,12 +7,12 @@
 #ifndef TIMER_HPP
 #define TIMER_HPP
 
+#include <chrono>
 #include <string>
 #include <cassert>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include <boost/timer/timer.hpp>
 
 namespace appcontext {
 	struct Timer
@@ -20,8 +20,9 @@ namespace appcontext {
 		double elapsed() const ;
 		void restart() ;
 		std::string display() const ;
+          Timer():now_pt(std::chrono::system_clock::now()){}
 	private:
-		boost::timer::cpu_timer m_boost_timer ;
+          std::chrono::time_point<std::chrono::system_clock> now_pt ;
 	} ;
 }
 

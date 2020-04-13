@@ -37,9 +37,8 @@ FetchContent_MakeAvailable(fmtlib)
 FetchContent_Declare(
   zstd
   GIT_REPOSITORY https://github.com/facebook/zstd.git
-  SOURCE_SUBDIR "build/cmake/"
   )
-
+# FetchContent_MakeAvailable()
 # FetchContent_Declare(
 #   bzip2
 #   https://github.com/sergiud/bzip2
@@ -56,7 +55,7 @@ FetchContent_Declare(
 FetchContent_GetProperties(zstd)
 if(NOT zstd_POPULATED)
   FetchContent_Populate(zstd)
-  add_subdirectory("${zstd_SOURCE_DIR}/build/cmake" EXCLUDE_FROM_ALL)
+  add_subdirectory("${zstd_SOURCE_DIR}/build/cmake" "${zstd_BINARY_DIR}" EXCLUDE_FROM_ALL)
 endif()
 
 target_include_directories(libzstd_static PUBLIC $<BUILD_INTERFACE:${zstd_SOURCE_DIR}/lib> $<INSTALL_INTERFACE:include>)

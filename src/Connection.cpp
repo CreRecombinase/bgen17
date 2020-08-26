@@ -7,7 +7,7 @@
 #include "db/Connection.hpp"
 #include "db/SQLite3Connection.hpp"
 #include "db/SQLStatement.hpp"
-
+#include <memory>
 namespace db {
 	Connection::UniquePtr Connection::create( std::string const& filename, std::string const& mode ) {
           return std::make_unique<SQLite3Connection>( filename, true, mode ) ;
